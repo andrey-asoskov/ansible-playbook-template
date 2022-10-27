@@ -1,0 +1,31 @@
+---
+- name: Add Python repository (apt)
+  ansible.builtin.apt_repository:
+    repo: ppa:deadsnakes/ppa
+    state: present
+  when: ansible_pkg_mgr == 'apt'
+
+- name: Install Python (apt)
+  ansible.builtin.apt:
+    name: python{{ python_ver | regex_replace('.[0-99]$') }}
+    allow_downgrade: true
+    force: true
+    update_cache: true
+    state: present
+  when: ansible_pkg_mgr == 'apt'
+
+- name: Install python distutils (apt)
+  ansible.builtin.apt:
+    name: python{{ python_ver | regex_replace('.[0-99]$') }}-distutils
+    update_cache: true
+    state: present
+  when: ansible_pkg_mgr == 'apt'
+
+- name: Get new python version  # noqa command-instead-of-shell
+  ansible.builtin.shell: /usr/bin/python{{ python_ver | regex_replace('.[0-99]$') }} --version
+  changed_when: false
+  register: new_python_version
+
+- name: Show new python version
+  ansible.builtin.debug:
+    var: new_python_version.stdout_lines

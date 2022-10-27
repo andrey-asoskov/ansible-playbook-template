@@ -1,0 +1,100 @@
+---
+- name: Make sure docker is not running  # noqa ignore-errors
+  ansible.builtin.service:
+    name: docker
+    state: stopped
+  ignore_errors: true
+
+- name: Remove old docker versions (yum)
+  ansible.builtin.yum:
+    name:
+      - docker
+      - docker-client
+      - docker-client-latest
+      - docker-common
+      - docker-latest
+      - docker-latest-logrotate
+      - docker-logrotate
+      - docker-engine
+      - podman
+      - runc
+    state: absent
+  when: ansible_pkg_mgr == 'yum'
+
+- name: Install yum-utils (yum)
+  ansible.builtin.yum:
+    name: yum-utils
+    state: present
+  when: ansible_pkg_mgr == 'yum'
+
+- name: Add Docker repo (yum)
+  ansible.builtin.yum_repository:
+    name: docker-ce
+    baseurl: https://download.docker.com/linux/rhel/docker-ce.repo
+    enabled: true
+    state: present
+  when: ansible_pkg_mgr == 'yum'
+  tags:
+    - test4
+
+- name: Check if Docker is installed (yum)
+  ansible.builtin.yum:
+    name: docker={{ docker_ver }}
+    disablerepo: packages-microsoft-com-prod
+    state: present
+  when: ansible_pkg_mgr == 'yum'
+
+- name: Remove old docker versions (apt)
+  ansible.builtin.apt:
+    name:
+      - docker
+      - docker-ce
+      - docker-engine
+      - docker.io
+      - containerd
+      - runc
+    state: absent
+  when: ansible_pkg_mgr == 'apt'
+
+- name: Install docker-ce prerequisites (apt)
+  ansible.builtin.apt:
+    name:
+      - ca-certificates
+      - curl
+      - gnupg
+      - lsb-release
+    state: present
+  when: ansible_pkg_mgr == 'apt'
+
+- name: Add an Apt signing key for Docker repository (apt)
+  ansible.builtin.apt_key:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    state: present
+  when: ansible_pkg_mgr == 'apt'
+  tags:
+    - test4
+
+- name: Add docker repository (apt)
+  ansible.builtin.apt_repository:
+    repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_facts['distribution_release'] }} stable     # noqa yaml
+    state: present
+  when: ansible_pkg_mgr == 'apt'
+
+- name: Install docker-ce (apt)
+  ansible.builtin.apt:
+    name: docker-ce=5:{{ docker_ver }}~3-0~ubuntu-focal
+    allow_downgrade: true
+    force: true
+    state: present
+  when: ansible_pkg_mgr == 'apt'
+
+- name: Check if Docker service is enabled and running
+  ansible.builtin.service:
+    name: docker
+    state: started
+    enabled: true
+
+- name: Restart Docker service
+  ansible.builtin.service:
+    name: docker
+    state: restarted

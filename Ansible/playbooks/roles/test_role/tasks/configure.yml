@@ -1,0 +1,26 @@
+---
+- name: Import vars
+  ansible.builtin.include_vars: configure.yml
+
+# - name: Firewall allows HTTP traffic
+#   ansible.posix.firewalld:
+#     service: "{{ firewall_service }}"
+#     permanent: true
+#     state: enabled
+#     immediate: true
+
+# - name: Create placeholder file
+#   ansible.builtin.copy:
+#     src: "index.html"
+#     dest: "{{ file }}"
+#     mode: 0644
+#   notify: Restart service
+
+- name: Configure /etc/motd
+  ansible.builtin.template:
+    src: motd.j2
+    dest: /etc/motd
+    owner: root
+    group: root
+    mode: 0644
+  become: true

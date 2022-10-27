@@ -1,0 +1,69 @@
+---
+- name: Get timestamp
+  hosts: localhost
+  connection: ansible.builtin.local
+  gather_facts: false
+  become: false
+  tasks:
+    - name: Get timestamp
+      ansible.builtin.command: "date -u '+%Y-%m-%d_%H-%M-%S_UTC'"
+      connection: ansible.builtin.local
+      changed_when: false
+      register: timestamp
+    - name: Register dummy host with timestamp variable
+      ansible.builtin.add_host:
+        name: "DUMMY_HOST"
+        timestamp_stdout: "{{ timestamp.stdout }}"
+      changed_when: false
+    - name: Get PWD
+      ansible.builtin.command: "pwd"
+      connection: ansible.builtin.local
+      changed_when: false
+      register: pwd
+    - name: Register dummy host with PWD variable
+      ansible.builtin.add_host:
+        name: "DUMMY_HOST"
+        pwd_stdout: "{{ pwd.stdout }}"
+      changed_when: false
+    - name: Register dummy host with Environment variable
+      ansible.builtin.add_host:
+        name: "DUMMY_HOST"
+        environment: "{{ environment }}"
+      changed_when: false
+
+- name: Get logs
+  # hosts: "tag_Name_app_{{ environment }}_app_forms,tag_Name_app_{{ environment }}_app_trainer"
+  hosts: i-0c741bf91ab15f24f
+  connection: community.aws.aws_ssm
+  gather_facts: false
+  become: true
+  vars:
+    ansible_aws_ssm_timeout: 180
+    ansible_aws_ssm_bucket_name: "552667997578-app-prod-access-logs"
+    timestamp_to_use: "{{ hostvars['DUMMY_HOST']['timestamp_stdout'] }}"
+  roles:
+    - collect_logs
+
+- name: Create an archive for collected logs
+  hosts: localhost
+  connection: ansible.builtin.local
+  gather_facts: false
+  become: false
+  tasks:
+    - name: Create archive
+      community.general.archive:
+        path:
+          "{{ hostvars['DUMMY_HOST']['pwd_stdout'] }}/\
+          logs-{{ hostvars['DUMMY_HOST']['environment'] }}-{{ app_version }}/\
+          {{ hostvars['DUMMY_HOST']['timestamp_stdout'] }}"
+        dest:
+          "{{ hostvars['DUMMY_HOST']['pwd_stdout'] }}/\
+          logs-{{ hostvars['DUMMY_HOST']['environment'] }}-{{ app_version }}/\
+          logs-{{ hostvars['DUMMY_HOST']['environment'] }}-{{ app_version }}-{{ hostvars['DUMMY_HOST']['timestamp_stdout'] }}.tgz"
+        mode: 0644
+    - name: Show archive file name
+      ansible.builtin.debug:
+        msg:
+          "{{ hostvars['DUMMY_HOST']['pwd_stdout'] }}/\
+          logs-{{ hostvars['DUMMY_HOST']['environment'] }}-{{ app_version }}/\
+          logs-{{ hostvars['DUMMY_HOST']['environment'] }}-{{ app_version }}-{{ hostvars['DUMMY_HOST']['timestamp_stdout'] }}.tgz"

@@ -1,0 +1,12 @@
+---
+- name: Install python prerequisites (yum)
+  ansible.builtin.yum:
+    name:
+      - wget
+      - yum-utils
+      - gcc
+      - openssl-devel
+      - bzip2-devel
+      - libffi-devel
+    state: present
+  when: ansible_pkg_mgr == 'yum'

@@ -1,0 +1,10 @@
+---
+users:
+  - name: ansible
+    groups: sudo
+    shell: /bin/bash
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    ssh-authorized-keys:
+      - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDVzd3T+0PbfcUFU7u4U9oAC3PqNzNkcNOnVYkSZFkV65W+QqyRYVIqETHJYO/2yJnL6ivk/AXW6Xyi7VFKKApECfu/r8ihyGhBDrDLMd+dP1e7usXNPBRfrBECU3UQbh0bcBy0dV7RfrhsI2xFcxDyZ0r7QWaY6jPlKQ1jadOcODQ5aeTVjYbzsp8O83Aa7bb9zIxYkI90OcoiaFcIvI8rByaDfZi6MTqSKAmdSMvNl2dVOb0nyoAbzRzWLS9jumUamKFAvrEfPf+IqLo0ci14m1oD4ePGtVRpCkqCnUT8e/fx2WjjbUfsVKwY+c1Cebb3S269qHPgt8l+kljESveT andrey@macbookair-andrew
+runcmd:
+  - touch /tmp/test.txt

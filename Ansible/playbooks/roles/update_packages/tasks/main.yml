@@ -1,0 +1,21 @@
+---
+- name: Update all packages (yum)
+  ansible.builtin.yum:
+    name: '*'  # noqa package-latest
+    state: latest
+    update_cache: true
+  when: ansible_pkg_mgr == 'yum'
+
+- name: Install aptitude (apt)
+  ansible.builtin.apt:
+    name: aptitude
+    state: present
+    update_cache: true
+    cache_valid_time: 7200
+  when: ansible_pkg_mgr == 'apt'
+
+- name: Update all packages (apt)
+  ansible.builtin.apt:
+    upgrade: safe
+    only_upgrade: true
+  when: ansible_pkg_mgr == 'apt'

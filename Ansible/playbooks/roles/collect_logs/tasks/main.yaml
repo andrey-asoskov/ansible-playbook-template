@@ -1,0 +1,52 @@
+---
+- name: Copy diagnostics file
+  ansible.builtin.copy:
+    src: diagnostics_15062022.bash
+    dest: /opt/hs/app-trainer-{{ app_version }}/diagnostics3.bash
+    force: true
+    owner: root
+    group: root
+    mode: 0755
+  when: run_script
+
+- name: Run diagnostics script
+  ansible.builtin.command: /bin/bash /opt/hs/app-trainer-{{ app_version }}/diagnostics3.bash
+  args:
+    chdir: /opt/hs/app-trainer-{{ app_version }}
+  environment:
+    HS_APP_INFO: '{{ hs_app_info }}'
+  changed_when: false
+  register: shell1
+  when: run_script
+
+- name: Show diagnostics script output
+  ansible.builtin.debug:
+    var: shell1.stdout_lines
+  when: run_script
+
+- name: Find files to fetch
+  ansible.builtin.find:
+    paths:
+      - /mnt/hs/diagnostics/
+      - /opt/hs/diagnostics/
+    patterns: ^.*tar.gza.$
+    age: '{{ logs_age }}'
+    use_regex: true
+  register: files_to_copy
+
+- name: Show logs files to copy
+  ansible.builtin.debug:
+    msg: '{{ item.path }}'
+  loop: '{{ files_to_copy.files }}'
+  loop_control:
+    label: '{{ item.path }}'
+
+- name: Fetch diagnostics script output
+  ansible.builtin.fetch:
+    src: '{{ item.path }}'
+    dest: ./logs-{{ tags.Environment }}-{{ app_version }}/{{ timestamp_to_use }}/{{ item.path | basename | split('.tar.') | first }}-{{ tags.component }}-{{
+      inventory_hostname }}.{{ item.path | basename | split('.tar.') | last }}
+    flat: true
+  loop: '{{ files_to_copy.files }}'
+  loop_control:
+    label: '{{ item.path }}'

@@ -1,0 +1,28 @@
+## Python
+**/__pycache__
+*.pyc
+# Installer logs
+pip-log.txt
+# Unit test / coverage reports
+.coverage
+.tox
+nosetests.xml
+# SQLite databases
+*.sqlite
+# Virtual environment
+venv/
+.venv/
+.env
+
+
+#Temp
+Temp/
+
+# OSX
+**/.DS_Store
+
+#Vagrant
+.vagrant/
+
+#Zip
+*.zip

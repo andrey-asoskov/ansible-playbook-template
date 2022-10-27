@@ -1,0 +1,143 @@
+---
+- name: Check if there is enough space for /
+  ansible.builtin.assert:
+    that: (ansible_mounts|selectattr("mount", "equalto", "/")|list)[0].size_available > 30000000000
+
+- name: Create a new primary partition
+  community.general.parted:
+    device: /dev/nvme1n1
+    number: 1
+    state: present
+  when: partition_is_created is undefined
+  register: partition_is_created
+
+- name: Gather Facts to update the list of partitions
+  ansible.builtin.setup:
+
+- name: Create a xfs filesystem on /dev/nvme1n1
+  community.general.filesystem:
+    fstype: xfs
+    dev: "/dev/{{ (ansible_devices.nvme1n1.partitions.keys() | list).0 }}"
+  when: fs_is_created is undefined
+  register: fs_is_created
+
+- name: Gather Facts to update UUIDs
+  ansible.builtin.setup:
+
+# - name: Get UUID of secondary disk drive
+#   ansible.builtin.shell: "set -o pipefail && lsblk -lp -o UUID,NAME,MOUNTPOINT | grep '/dev/nvme1n1p1' | awk '{print $1}'"
+#   args:
+#     executable: /usr/bin/bash
+#   register: shell1
+#   changed_when: false
+
+# - name: Show shell output
+#   ansible.builtin.debug:
+#     var: shell1.stdout
+
+- name: Create a directory (/mnt/hs)
+  ansible.builtin.file:
+    path: /mnt/hs
+    state: directory
+    mode: '0755'
+    owner: '1000'
+    group: '1000'
+
+- name: Create a directory (/var/lib/docker) if it does not exist (forms)
+  ansible.builtin.file:
+    path: /var/lib/docker
+    state: directory
+    mode: '0755'
+    owner: root
+    group: root
+  when: app_component == "forms"
+
+- name: Mount secondary disk
+  ansible.posix.mount:
+    path: "{{ '/var/lib/docker' if app_component == 'forms' else '/mnt/hs' }}"
+    src: "UUID={{ (ansible_device_links.uuids.nvme1n1p1 | list).0 }}"
+    fstype: xfs
+    boot: true
+    state: mounted
+  tags:
+    - mount
+
+- name: Gather Facts to update mounts
+  ansible.builtin.setup:
+  when:
+    - app_component == "forms"
+
+- name: Check disk space for /var/lib/docker
+  ansible.builtin.assert:
+    that:
+      - (ansible_mounts|selectattr("mount", "equalto", "/var/lib/docker")|list)[0].size_available > 15000000000
+  when:
+    - app_component == "forms"
+
+# - name: Test mount points
+#   ansible.builtin.shell: mount # noqa command-instead-of-shell command-instead-of-module
+#   changed_when: false
+#   register: mount_points_list
+#
+# - name: Display list of mount points
+#   ansible.builtin.debug:
+#     var: mount_points_list.stdout_lines
+
+# - name: Get /etc/fstab # noqa command-instead-of-shell
+#   ansible.builtin.shell: cat /etc/fstab
+#   changed_when: false
+#   register: shell2
+
+# - name: Show /etc/fstab
+#   ansible.builtin.debug:
+#     var: shell2.stdout_lines
+
+- name: Create a directory (/mnt/hs/media)
+  ansible.builtin.file:
+    path: /mnt/hs/media
+    state: directory
+    mode: '0755'
+    owner: '1000'
+    group: '1000'
+  when: app_component == "forms"
+
+- name: Create a directory (/mnt/hs/media)
+  ansible.builtin.file:
+    path: /mnt/hs/media
+    state: directory
+    mode: '0755'
+    owner: '1000'
+    group: '1000'
+  when: app_component == "trainer" and app_version is version('32.0.3', '<')
+
+- name: Create a directory (/mnt/hs/trainer_media)
+  ansible.builtin.file:
+    path: /mnt/hs/trainer_media
+    state: directory
+    mode: '0755'
+    owner: '1000'
+    group: '1000'
+  when: app_component == "trainer" and app_version is version('32.0.3', '>=')
+
+# To fix issue with 30.0.2 release
+- name: Create a directory (/mnt/hs/input)
+  ansible.builtin.file:
+    path: /mnt/hs/input
+    state: directory
+    mode: '0755'
+    owner: '1000'
+    group: '1000'
+  tags:
+    - fix
+  when: app_component == "trainer" and app_version is version('30.0.2', '>')
+
+- name: Create a directory (/mnt/hs/sdm_blocks)
+  ansible.builtin.file:
+    path: /mnt/hs/sdm_blocks
+    state: directory
+    mode: '0755'
+    owner: '1000'
+    group: '1000'
+  tags:
+    - fix
+  when: app_component == "trainer" and app_version is version('30.0.2', '>')

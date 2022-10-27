@@ -1,0 +1,32 @@
+---
+- name: Import vars
+  ansible.builtin.include_vars: install.yml
+
+# - name: "Install the {{ package }}"
+#   ansible.builtin.apt:
+#     name: "{{ package }}"
+#     update_cache: true
+
+- name: "Install the nginx"
+  ansible.builtin.apt:
+    name: "nginx"
+    update_cache: true
+
+# - name: Update config for {{ package }}
+#   ansible.builtin.lineinfile:
+#     path: /etc/apache2/apache2.conf
+#     regexp: '^.*KeepAliveTimeout.*'
+#     backrefs: true
+#     line: 'KeepAliveTimeout 3'
+
+# - name: Start the service for {{ service }}
+#   ansible.builtin.service:
+#     name: "{{ service }}"
+#     enabled: true
+#     state: started
+
+- name: Start the service for nginx
+  ansible.builtin.service:
+    name: "nginx"
+    enabled: true
+    state: started

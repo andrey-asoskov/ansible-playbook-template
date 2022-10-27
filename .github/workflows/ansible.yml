@@ -1,0 +1,69 @@
+---
+name: Ansible Test
+on:
+  pull_request:
+    branches:
+      - '**'
+    paths:
+      - .github/workflows/ansible.yml
+      - Ansible/**
+      - .checkov.yaml
+  push:
+    branches:
+      - '**'
+    paths:
+      - .github/workflows/ansible.yml
+      - Ansible/**
+      - .checkov.yaml
+
+jobs:
+  ansible-test:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: 3.9.14 # Version range or exact version of a Python version to use, using SemVer's version range syntax
+          architecture: x64 # optional x64 or x86. Defaults to x64 if not specified
+          # cache: 'pip' # caching pip dependencies
+      - name: Ansible Install
+        id: ansible-install
+        run: |
+          pip install -r ./Ansible/requirements.txt
+
+          ansible-playbook --version
+
+          ansible-galaxy collection install -r ./Ansible/collections/requirements.yml
+      - name: Ansible Lint
+        id: ansible-lint
+        run: |
+          set -x
+          ansible-lint --version
+          cat ./Ansible/playbooks/.ansible-lint
+
+          for p in $(find ./Ansible/playbooks/ -maxdepth 1 -mindepth 1 -name '*.yaml' -type f);do
+            ansible-playbook $p --syntax-check
+            ansible-lint -s -c ./Ansible/playbooks/.ansible-lint $p
+          done
+
+      # - name: Checkov Manual Run
+      #   id: checkov-manual
+      #   run: |
+      #     set -x
+      #     pip install checkov
+      #     checkov -d . --config-file ./.checkov.yaml
+
+      # - name: Run Checkov action
+      #   id: checkov
+      #   uses: bridgecrewio/checkov-action@master
+      #   with:
+      #     directory: .
+      #     config_file: .checkov.yaml
+      #     output_format: sarif
+      #     quiet: false
+
+      # - name: Upload Checkov SARIF file
+      #   uses: actions/upload-artifact@v3
+      #   with:
+      #     name: checkov.sarif
+      #     path: results.sarif

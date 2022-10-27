@@ -1,0 +1,47 @@
+---
+- name: Check if AWS CLI 2 is already installed  # noqa command-instead-of-shell
+  ansible.builtin.shell: "set -o pipefail && aws --version | grep 'aws-cli/2'"
+  args:
+    executable: /usr/bin/bash
+  ignore_errors: true
+  changed_when: false
+  register: current_awscli_version
+
+- name: Show current AWS CLI version
+  ansible.builtin.debug:
+    var: current_awscli_version.rc
+
+- name: Download AWS CLI 2 installation bundle
+  ansible.builtin.get_url:
+    url: "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip"
+    dest: "/root/awscliv2.zip"
+    mode: 0644
+  when: current_awscli_version.rc != 0
+
+- name: Unzip AWS CLI 2 installation bundle
+  ansible.builtin.unarchive:
+    src: "/root/awscliv2.zip"
+    dest: "/root"
+    remote_src: true
+    owner: root
+    group: root
+  when: current_awscli_version.rc != 0
+
+- name: Run AWS CLI 2 Install  # noqa no-changed-when
+  ansible.builtin.command: "./aws/install"
+  args:
+    chdir: "/root"
+  when: current_awscli_version.rc != 0
+
+- name: Get new AWS CLI version  # noqa command-instead-of-shell
+  ansible.builtin.shell: "set -o pipefail && aws --version | grep 'aws-cli/2'"
+  args:
+    executable: /usr/bin/bash
+  changed_when: false
+  register: new_awscli_version
+  when: current_awscli_version.rc != 0
+
+- name: Show new AWS CLI version
+  ansible.builtin.debug:
+    var: new_awscli_version.stdout_lines
+  when: current_awscli_version.rc != 0

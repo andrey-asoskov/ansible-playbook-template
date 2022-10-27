@@ -1,0 +1,71 @@
+---
+# branch: develop
+# check:
+#   - CKV_DOCKER_1
+# compact: true
+# directory:
+#   - test-dir
+# docker-image: sample-image
+# dockerfile-path: Dockerfile
+download-external-modules: true
+evaluate-variables: true
+# external-checks-dir:
+#   - sample-dir
+# external-modules-download-path: .external_modules
+framework:
+  #  - all
+  - dockerfile
+  - github_configuration
+  - github_actions
+  - helm
+  - json
+  - yaml
+  - kubernetes
+  - kustomize
+  - secrets
+  - serverless
+  - terraform
+  - terraform_plan
+# no-guide: true
+# output: cli
+quiet: true
+# repo-id: bridgecrew/sample-repo
+skip-check:
+  - CKV2_AWS_5   # Ensure Security Groups are attached to EC2 instances or ENIs
+  - CKV2_AWS_11  # Ensure VPC flow logging is enabled in all VPCs
+  - CKV_AWS_88   # EC2 instance should not have public IP
+  - CKV_AWS_88   # EC2 instance should not have public IP
+  - CKV_AWS_7    # Ensure AWS CMK rotation is enabled
+  - CKV_AWS_50   # Ensure AWS Lambda functions with tracing are enabled
+  - CKV_AWS_260  # Ensure no security groups allow ingress from 0.0.0.0:0 to port 80
+  - CKV_AWS_252  # Ensure CloudTrail defines an SNS Topic
+  - CKV_AWS_25   # Ensure no security groups allow ingress from 0.0.0.0:0 to port 3389
+  - CKV_AWS_241  # Ensure that Kinesis Firehose Delivery Streams are encrypted with CMK
+  - CKV_AWS_240  # Ensure Kinesis Firehose delivery stream is encrypted
+  - CKV_AWS_24   # Ensure no security groups allow ingress from 0.0.0.0:0 to port 22
+  - CKV_AWS_231  # Ensure no NACL allow ingress from 0.0.0.0:0 to port 3389
+  - CKV_AWS_21   # Ensure AWS S3 object versioning is enabled
+  - CKV_AWS_199  # Ensure Image Builder Distribution Configuration encrypts AMI's using KMS
+  - CKV_AWS_19   # Ensure all data stored in the S3 bucket is securely encrypted at rest
+  - CKV_AWS_186  # Ensure S3 bucket Object is encrypted by KMS using a customer managed Key (CMK)
+  - CKV_AWS_180  # Ensure Image Builder component is encrypted by KMS using a customer managed Key (CMK)
+  - CKV_AWS_18   # Ensure AWS access logging is enabled on S3 buckets
+  - CKV_AWS_173  # Check encryption settings for Lambda environmental variable
+  - CKV_AWS_150  # Ensure load balancer has deletion protection enabled
+  - CKV_AWS_145  # Ensure that S3 buckets are encrypted with KMS by default
+  - CKV_AWS_144  # Ensure S3 bucket has cross-region replication enabled
+  - CKV_AWS_130  # Ensure VPC subnets do not assign public IP by default
+  - CKV_AWS_117  # Ensure AWS Lambda function is configured inside a VPC
+  - CKV_AWS_116  # Ensure AWS Lambda function is configured for a DLQ
+  - CKV_AWS_111  # Ensure IAM policies does not allow write access without constraints
+  - CKV_AWS_109  # Ensure IAM policies does not allow permissions management / resource exposure without constraints
+    # - CKV2_AWS_31 # Ensure WAF2 has a Logging Configuration
+    # - CKV_AWS_192 # Ensure WAF prevents message lookup in Log4j2
+    # - CKV_AWS_158 # Ensure that CloudWatch Log Group is not encrypted by KMS
+    # - CKV_AWS_111 # Ensure IAM policies does not allow write access without constraint
+# skip-fixes: true
+# skip-framework:
+#   - dockerfile
+#   - secrets
+# skip-suppressions: true
+# soft-fail: true

@@ -1,0 +1,6 @@
+---
+# handlers:
+- name: Restart service
+  ansible.builtin.service:
+    name: "{{ service }}"
+    state: restarted

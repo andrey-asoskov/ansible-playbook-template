@@ -1,0 +1,14 @@
+---
+- name: Install tools
+  hosts: all
+  vars:
+    python_ver: 3.10.4
+    python_install_ubuntu: apt
+  roles:
+    - setup_disks
+    - install_awscli2
+    - update_packages
+    - install_docker
+    - install_python
+    - install_postgresql_client
+  become: true

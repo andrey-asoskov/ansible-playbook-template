@@ -1,0 +1,25 @@
+---
+plugin: amazon.aws.aws_ec2
+cache: false
+cache_plugin: ansible.builtin.jsonfile
+cache_timeout: 7200
+cache_connection: /tmp/aws_inventory
+cache_prefix: aws_ec2
+regions:
+  - us-east-1
+  - eu-west-2
+keyed_groups:
+  # add hosts to tag_Name_value groups for each aws_ec2 host's tags.Name variable
+  - key: tags.Name
+    prefix: tag_Name_
+    separator: ''
+  - key: tags.component
+    prefix: tag_component_
+    separator: ''
+  - key: tags.Environment
+    prefix: tag_Environment_
+    separator: ''
+hostnames:
+  - instance-id
+compose:
+  ansible_host: instance-id

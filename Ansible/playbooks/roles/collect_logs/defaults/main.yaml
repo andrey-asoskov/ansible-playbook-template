@@ -1,0 +1,4 @@
+---
+logs_age: -40m
+run_script: false
+hs_app_info: false

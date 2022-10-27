@@ -1,0 +1,43 @@
+---
+- name: Check if Python version is already installed  # noqa command-instead-of-shell
+  ansible.builtin.shell: set -o pipefail && python{{ python_ver | regex_replace('.[0-99]$') }} --version | awk '{print $2}'
+  args:
+    executable: /usr/bin/bash
+  ignore_errors: true
+  changed_when: false
+  register: current_python_version
+
+- name: Show current python version
+  ansible.builtin.debug:
+    var: current_python_version.rc
+
+- name: Install yum prerequisites for Python build  # Not working for redhat. Need to fix issue with missing openssl
+  ansible.builtin.import_tasks: yum.yml
+  when: ansible_pkg_mgr == 'yum' and current_python_version.rc != 0
+
+- name: Install apt prerequisites for Python build
+  ansible.builtin.import_tasks: apt.yml
+  when: ansible_pkg_mgr == 'apt' and current_python_version.rc != 0 and python_install_ubuntu == "build"
+
+- name: Build Python
+  ansible.builtin.import_tasks: python_build.yml
+  when: current_python_version.rc != 0 and python_install_ubuntu == "build"
+
+- name: Install Python via apt
+  ansible.builtin.import_tasks: install_from_apt_repo.yml
+  when: current_python_version.rc != 0 and ansible_pkg_mgr == 'apt' and python_install_ubuntu == "apt"
+
+- name: Install PIP
+  ansible.builtin.shell: set -o pipefail && curl -sS https://bootstrap.pypa.io/get-pip.py | /usr/bin/python{{ python_ver | regex_replace('.[0-99]$') }}
+  changed_when: false
+  args:
+    executable: /usr/bin/bash
+
+- name: Check PIP  # noqa command-instead-of-shell
+  ansible.builtin.shell: /usr/bin/python{{ python_ver | regex_replace('.[0-99]$') }} -m pip list
+  changed_when: false
+  register: pip_packages
+
+- name: Show PIP packages
+  ansible.builtin.debug:
+    var: pip_packages.stdout_lines

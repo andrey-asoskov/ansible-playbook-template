@@ -1,0 +1,64 @@
+---
+- name: Check if Python installation bundle is already downloaded
+  ansible.builtin.stat:
+    path: /root/Python-{{ python_ver }}.tgz
+  register: python_downloaded
+
+- name: Download Python installation bundle
+  ansible.builtin.get_url:
+    url: https://www.python.org/ftp/python/{{ python_ver }}/Python-{{ python_ver }}.tgz
+    dest: /root/Python-{{ python_ver }}.tgz
+    mode: 0644
+  when: not python_downloaded.stat.exists
+
+- name: Create directory for Python installation bundle
+  ansible.builtin.file:
+    path: /root/Python-{{ python_ver }}
+    state: directory
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Check if Python installation bundle is already unzipped
+  ansible.builtin.stat:
+    path: /root/Python-{{ python_ver }}/configure
+  register: python_unzipped
+
+- name: Unzip Python installation bundle
+  ansible.builtin.unarchive:
+    src: /root/Python-{{ python_ver }}.tgz
+    dest: /root
+    remote_src: true
+    owner: root
+    group: root
+  when: not python_unzipped.stat.exists
+
+- name: Run configure  # noqa no-changed-when
+  ansible.builtin.command: ./configure
+  args:
+    chdir: /root/Python-{{ python_ver }}
+
+- name: Run make  # noqa no-changed-when
+  ansible.builtin.command: make
+  args:
+    chdir: /root/Python-{{ python_ver }}
+
+- name: Run make install  # noqa no-changed-when
+  ansible.builtin.command: make install
+  args:
+    chdir: /root/Python-{{ python_ver }}/
+
+- name: Create symlink for /usr/bin -> /usr/local/bin
+  ansible.builtin.file:
+    src: /usr/local/bin/python{{ python_ver | regex_replace('.[0-99]$') }}
+    dest: /usr/bin/python{{ python_ver | regex_replace('.[0-99]$') }}
+    state: link
+
+- name: Get new python version  # noqa command-instead-of-shell
+  ansible.builtin.shell: /usr/bin/python{{ python_ver | regex_replace('.[0-99]$') }} --version
+  changed_when: false
+  register: new_python_version
+
+- name: Show new python version
+  ansible.builtin.debug:
+    var: new_python_version.stdout_lines

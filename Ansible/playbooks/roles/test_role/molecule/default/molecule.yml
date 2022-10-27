@@ -1,0 +1,84 @@
+---
+dependency:
+  name: galaxy
+driver:
+  name: vagrant
+  provider:
+    # Can be any supported provider (virtualbox, parallels, libvirt, etc)
+    # Defaults to virtualbox
+    name: virtualbox
+  # Run vagrant up with --provision.
+  # Defaults to --no-provision)
+  provision: false
+platforms:
+  - name: instance
+    # box: fedora/32-cloud-base
+    box: ubuntu/jammy64
+    memory: 1024
+    cpus: 1
+    # List of dictionaries mapped to `config.vm.network`
+    # interfaces:
+      # `network_name` is the required identifier, all other keys map to
+      # arguments.
+      # - auto_config: true
+      #  network_name: private_network
+      #  type: dhcp
+#      - network_name: private_network
+#        ip: 192.168.123.3
+      # - network_name: forwarded_port
+      #  guest: 80
+      #  host: 8080
+    instance_raw_config_args:
+      # use single quotes to avoid YAML parsing as dict due to ':'
+      - 'vm.synced_folder ".", "/vagrant", type: "rsync"'
+      # Run 'uname' a provisionning step **needs 'provision: true' to work**
+      - 'vm.provision :shell, inline: "uname"'
+    # Dictionary of `config` options. Note that string values need to be
+    # explicitly enclosed in quotes.
+    config_options:
+      ssh.keep_alive: true
+      ssh.remote_user: 'vagrant'
+      synced_folder: true
+lint: |
+  set -e
+  yamllint -c=../../../../.yamllint.yaml .
+  ansible-lint
+  flake8
+provisioner:
+  name: ansible
+  playbooks:
+    converge: ${MOLECULE_PLAYBOOK:-converge.yml}
+  lint:
+    name: ansible-lint
+#    enabled: False
+verifier:
+  name: testinfra
+scenario:
+  name: default  # optional
+  create_sequence:      # molecule create
+    - create
+    - prepare
+  check_sequence:       # molecule check
+    - destroy
+    - dependency
+    - create
+    - prepare
+    - converge
+    - check
+    - destroy
+  converge_sequence:    # molecule converge
+    - dependency
+    - create
+    - prepare
+    - converge
+  destroy_sequence:     # molecule destroy
+    - cleanup
+    - destroy
+  test_sequence:        # molecule test
+#    - lint
+    - cleanup
+    - dependency
+    - syntax
+    - create
+    - prepare
+    - converge

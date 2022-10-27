@@ -1,0 +1,47 @@
+---
+- name: Collect facts
+  ansible.builtin.setup:
+  when: ansible_facts == {}
+
+- name: Ensure pgdg.repo Repo exists (yum)
+  ansible.builtin.yum_repository:
+    file: pgdg.repo
+    name: pgdg12
+    description: PostgreSQL 12 for RHEL/CentOS 7 - x86_64
+    baseurl: https://download.postgresql.org/pub/repos/yum/12/redhat/rhel-7-x86_64
+    enabled: true
+    gpgcheck: false
+    state: present
+  when: ansible_pkg_mgr == 'yum'
+
+- name: Check if postgresql12 is installed (yum)
+  ansible.builtin.yum:
+    name: postgresql12={{ postgresql_version }}
+    disablerepo: packages-microsoft-com-prod
+    state: present
+  when: ansible_pkg_mgr == 'yum'
+
+- name: Add an Apt signing key for Postgresql repository (apt)
+  ansible.builtin.apt_key:
+    url: https://www.postgresql.org/media/keys/ACCC4CF8.asc
+    state: present
+  when: ansible_pkg_mgr == 'apt'
+
+- name: Add Postgresql repository (apt)
+  ansible.builtin.apt_repository:
+    repo: deb http://apt.postgresql.org/pub/repos/apt {{ ansible_facts['distribution_release'] }}-pgdg main
+    state: present
+  when: ansible_pkg_mgr == 'apt'
+
+- name: Update cache (apt)
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 7200
+  when: ansible_pkg_mgr == 'apt'
+
+- name: Install postgresql-client-12
+  ansible.builtin.apt:
+    # name: "postgresql-client-12={{ postgresql_version }}-1.pgdg20.04+1+b1"
+    name: postgresql-client-12
+    state: present
+  when: ansible_pkg_mgr == 'apt'

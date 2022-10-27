@@ -1,0 +1,10 @@
+[flake8]
+# it's not a bug that we aren't using all of hacking
+ignore =
+#    E111, #Indentation is not a multiple of four
+#    E114, #Indentation is not a multiple of four (comment)
+    E722, #do not use bare 'except'
+    E501, #Line too long (82 &gt; 79 characters)
+    E126, #continuation line over-indented for hanging indent
+    E402, #module level import not at top of file
+indent-size = 2

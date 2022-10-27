@@ -1,0 +1,80 @@
+---
+default_language_version:
+  python: python3.9
+fail_fast: true
+exclude: |
+    (?x)^(
+      ^Temp/.*$
+    )$
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.3.0
+    hooks:
+      - id: check-yaml
+        exclude: '^Helm/charts/app/templates/|^K8s-manifests/'
+        files: ^.*\.(yaml|yml)$
+      - id: detect-private-key
+      - id: check-added-large-files
+      - id: check-executables-have-shebangs
+      - id: check-shebang-scripts-are-executable
+        exclude: ^.*\.tftpl$
+      - id: check-json
+        files: ^.*\.json$
+      - id: check-merge-conflict
+      - id: detect-aws-credentials
+      - id: check-symlinks
+      - id: destroyed-symlinks
+
+  # - repo: https://github.com/jumanjihouse/pre-commit-hooks
+  #   rev: 2.1.6  # or other specific tag
+  #   hooks:
+  #     - id: shellcheck
+  #       exclude: |
+  #           (?x)^(
+  #           )$
+  #       args:
+  #         - --exclude=SC1091
+
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.26.3
+    hooks:
+      - id: yamllint
+        types: [file, yaml]
+        exclude: '^Helm/charts/app/templates/'
+        args:
+          - -c=./.yamllint.yaml
+
+  - repo: https://github.com/zricethezav/gitleaks
+    rev: v8.8.11
+    hooks:
+      - id: gitleaks
+
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.31.1
+    hooks:
+      - id: markdownlint
+
+  # - repo: https://github.com/ansible-community/ansible-lint
+  #   rev: v6.3.0
+  #   hooks:
+  #     - id: ansible-lint
+  #       types: [file, yaml]
+  #       exclude: ^Insomnia/
+  #       files: ^Terraform/components/ec2-image-builder/Ansible/playbooks/.*\.yaml$
+  #       # args:
+  #       # - -c
+  #       # - ./Terraform/components/ec2-image-builder/Ansible/playbooks/.ansible-lint
+
+  - repo: local
+    hooks:
+      - id: ansible-lint
+        name: check ansible playbooks
+        language: system
+        entry: ansible-lint -s -c ./Ansible/playbooks/.ansible-lint
+        files: ^Ansible/playbooks/.*\.yaml$
+        # exclude: ^Ansible/playbooks/.*\.yaml$
+        exclude: |
+            (?x)^(
+              ^Ansible/playbooks/inventory/.*$ |
+              ^Ansible/playbooks/roles/.*$
+            )$

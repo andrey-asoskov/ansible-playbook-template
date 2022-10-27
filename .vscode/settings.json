@@ -1,0 +1,8 @@
+{
+  "yaml.schemas": {
+    "https://raw.githubusercontent.com/ansible/schemas/main/f/ansible.json#/$defs/tasks": "file:///Users/andrey-work/Documents/Work/Repos/ansible-template/Ansible/playbooks/roles/test_role/tasks/configure.yml"
+  },
+  "ansible.executionEnvironment.volumeMounts": [
+  
+  ]
+}
